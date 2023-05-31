@@ -1,36 +1,103 @@
-import React from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { createTask } from '../api/task.api';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { createTask, deleteTask, getTask, updateTask } from '../api/task.api';
+import { toast } from 'react-hot-toast';
 
 const TaskFormPage = () => {
-	const { register, handleSubmit, formState: errors } = useForm();
+	const {
+		register,
+		handleSubmit,
+		formState: { errors },
+		setValue,
+	} = useForm();
 	const navigate = useNavigate();
+	const params = useParams();
 
 	const onSubmit = handleSubmit(async data => {
-		await createTask(data);
+		if (params.id) {
+			await updateTask(params.id, data);
+			toast.success('Task updated', {
+				position: 'bottom-right',
+				style: {
+					background: '#101010',
+					color: '#fff',
+				},
+			});
+		} else {
+			await createTask(data);
+			toast.success('New Task Added', {
+				position: 'bottom-right',
+				style: {
+					background: '#101010',
+					color: '#fff',
+				},
+			});
+		}
+
 		navigate('/tasks');
 	});
 
+	useEffect(() => {
+		async function loadTask() {
+			if (params.id) {
+				const { data } = await getTask(params.id);
+				setValue('title', data.title);
+				setValue('description', data.description);
+			}
+		}
+		loadTask();
+	}, []);
+
 	return (
-		<div>
-			<form onSubmit={onSubmit}>
+		<div className='max-w-xl mx-auto'>
+			<form onSubmit={onSubmit} className='bg-zinc-800 p-10 rounded-lg mt-2'>
 				<input
 					type='text'
-					name='title'
-					placeholder='Write a Task'
+					placeholder='Title'
 					{...register('title', { required: true })}
+					className='bg-zinc-700 p-3 rounded-lg block w-full mb-3 focus:outline-none'
+					autoFocus
 				/>
-				{errors.title && <span>Title is required</span>}
+
+				{errors.title && <span>This field is required</span>}
+
 				<textarea
-					rows={3}
-					name='description'
-					placeholder='Write a Description'
+					placeholder='Description'
 					{...register('description', { required: true })}
-				></textarea>
-				{errors.description && <span>Description is required</span>}
-				<button type='submit'>Save</button>
+					className='bg-zinc-700 p-3 rounded-lg block w-full focus:outline-none'
+				/>
+
+				{errors.description && <span>This field is required</span>}
+
+				<button className='bg-green-400 hover:bg-green-500 p-3 rounded-lg block w-full mt-3'>
+					Save
+				</button>
 			</form>
+
+			{params.id && (
+				<div className='flex justify-end'>
+					<button
+						className='bg-red-500 p-3 rounded-lg w-48 mt-3'
+						onClick={async () => {
+							const accepted = window.confirm('Are you sure?');
+							if (accepted) {
+								await deleteTask(params.id);
+								toast.success('Task Removed', {
+									position: 'bottom-right',
+									style: {
+										background: '#101010',
+										color: '#fff',
+									},
+								});
+								navigate('/tasks');
+							}
+						}}
+					>
+						delete
+					</button>
+				</div>
+			)}
 		</div>
 	);
 };

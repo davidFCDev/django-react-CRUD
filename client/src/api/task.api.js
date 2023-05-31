@@ -1,25 +1,15 @@
 import axios from 'axios';
 
-const taskApi = axios.create({
+const tasksApi = axios.create({
 	baseURL: 'http://localhost:8000/tasks/api/v1/tasks/',
 });
 
-export const getTasks = () => {
-	return taskApi.get('/');
-};
+export const getTasks = () => tasksApi.get('/');
 
-export const createTask = task => {
-	return taskApi.post('/', task);
-};
+export const getTask = id => tasksApi.get(`/${id}`);
 
-export const getTask = id => {
-	return taskApi.get(`/${id}`);
-};
+export const createTask = task => tasksApi.post('/', task);
 
-export const updateTask = (id, task) => {
-	return taskApi.put(`/${id}`, task);
-};
+export const updateTask = (id, task) => tasksApi.put(`/${id}/`, task);
 
-export const deleteTask = id => {
-	return taskApi.delete(`/${id}`);
-};
+export const deleteTask = id => tasksApi.delete(`/${id}`);
